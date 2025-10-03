@@ -475,27 +475,26 @@ ALTER TABLE affiliate_earnings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE presets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
--- Profiles policies
+-- Profiles policies (fixed to avoid recursion)
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Admins can view all profiles" ON profiles FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
-);
+CREATE POLICY "Public profiles read" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Allow profile creation" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Wallets policies
 CREATE POLICY "Users can view own wallet" ON wallets FOR SELECT USING (
     user_id = auth.uid()
 );
-CREATE POLICY "Admins can view all wallets" ON wallets FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+CREATE POLICY "Users can update own wallet" ON wallets FOR UPDATE USING (
+    user_id = auth.uid()
 );
 
 -- Transactions policies
 CREATE POLICY "Users can view own transactions" ON transactions FOR SELECT USING (
     user_id = auth.uid()
 );
-CREATE POLICY "Admins can view all transactions" ON transactions FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+CREATE POLICY "Users can insert own transactions" ON transactions FOR INSERT WITH CHECK (
+    user_id = auth.uid()
 );
 
 -- Orders policies
@@ -505,16 +504,16 @@ CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (
 CREATE POLICY "Users can create orders" ON orders FOR INSERT WITH CHECK (
     user_id = auth.uid()
 );
-CREATE POLICY "Admins can view all orders" ON orders FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+CREATE POLICY "Users can update own orders" ON orders FOR UPDATE USING (
+    user_id = auth.uid()
 );
 
 -- Payments policies
 CREATE POLICY "Users can view own payments" ON payments FOR SELECT USING (
     user_id = auth.uid()
 );
-CREATE POLICY "Admins can view all payments" ON payments FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+CREATE POLICY "Users can create payments" ON payments FOR INSERT WITH CHECK (
+    user_id = auth.uid()
 );
 
 -- Tickets policies
@@ -524,8 +523,8 @@ CREATE POLICY "Users can view own tickets" ON tickets FOR SELECT USING (
 CREATE POLICY "Users can create tickets" ON tickets FOR INSERT WITH CHECK (
     user_id = auth.uid()
 );
-CREATE POLICY "Support can view all tickets" ON tickets FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+CREATE POLICY "Users can update own tickets" ON tickets FOR UPDATE USING (
+    user_id = auth.uid()
 );
 
 -- Public read policies for services and categories
