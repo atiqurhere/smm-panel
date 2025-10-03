@@ -19,9 +19,16 @@ export default function Navigation() {
   const handleSignOut = async () => {
     try {
       await signOut()
-      router.push('/')
+      // Wait a moment for the auth state to clear
+      setTimeout(() => {
+        router.push('/')
+        // Force a page refresh to ensure clean state
+        window.location.reload()
+      }, 100)
     } catch (error) {
       console.error('Error signing out:', error)
+      // Fallback: still redirect even if there's an error
+      router.push('/')
     }
   }
 

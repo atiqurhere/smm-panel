@@ -26,6 +26,7 @@ function SignInForm() {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!authLoading && user) {
+      console.log('User is authenticated, redirecting to:', redirect)
       router.push(redirect)
     }
   }, [user, authLoading, redirect, router])
@@ -47,8 +48,12 @@ function SignInForm() {
       if (error) {
         setError(error.message)
         setLoading(false)
+      } else if (data?.user) {
+        // Successfully signed in, but wait a moment for auth state to update
+        setTimeout(() => {
+          router.push(redirect)
+        }, 100)
       }
-      // Don't redirect here - let useEffect handle it when user state updates
     } catch (err: any) {
       setError('An unexpected error occurred')
       setLoading(false)
