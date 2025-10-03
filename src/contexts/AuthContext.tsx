@@ -14,6 +14,7 @@ type AuthContextType = {
   resetPassword: (email: string) => Promise<any>
   updatePassword: (password: string) => Promise<any>
   verifyOtp: (email: string, token: string, type: 'signup' | 'email' | 'recovery') => Promise<any>
+  resendVerification: (email: string) => Promise<any>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -119,6 +120,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error }
   }
 
+  const resendVerification = async (email: string) => {
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    })
+
+    return { data, error }
+  }
+
   const value = {
     user,
     session,
@@ -129,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     updatePassword,
     verifyOtp,
+    resendVerification,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
