@@ -31,6 +31,32 @@ function SignInForm() {
     }
   }, [user, authLoading, redirect, router])
 
+  const handleConfirmEmail = async () => {
+    if (!email) {
+      setError('Please enter your email first')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/dev/confirm-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setError('')
+        alert('Email confirmed! You can now sign in.')
+      } else {
+        setError(result.error)
+      }
+    } catch (error) {
+      setError('Failed to confirm email')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -46,16 +72,30 @@ function SignInForm() {
       const { data, error } = await signIn(email, password)
 
       if (error) {
-        setError(error.message)
+        // Handle specific error cases
+        if (error.message.includes('confirmation')) {
+          setError('Please check your email and click the confirmation link to activate your account.')
+        } else if (error.message.includes('Invalid login')) {
+          setError('Invalid email or password. Please try again.')
+        } else {
+          setError(error.message)
+        }
         setLoading(false)
       } else if (data?.user) {
-        // Successfully signed in, but wait a moment for auth state to update
-        setTimeout(() => {
-          router.push(redirect)
-        }, 100)
+        // Check if user is confirmed
+        if (data.user.email_confirmed_at) {
+          // Successfully signed in, redirect after a moment for auth state to update
+          setTimeout(() => {
+            router.push(redirect)
+          }, 100)
+        } else {
+          setError('Please check your email and click the confirmation link to activate your account.')
+          setLoading(false)
+        }
       }
     } catch (err: any) {
-      setError('An unexpected error occurred')
+      console.error('Signin error:', err)
+      setError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
   }
@@ -74,7 +114,14 @@ function SignInForm() {
           <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  {error}
+                  {error.includes('confirmation') && process.env.NODE_ENV === 'development' && (
+                    <div className="mt-2 text-xs">
+                      💡 <strong>Development Mode:</strong> Use the "Confirm Email" button below to bypass email confirmation.
+                    </div>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -141,6 +188,19 @@ function SignInForm() {
                 'Sign In'
               )}
             </Button>
+
+            {/* Development Helper */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full text-xs" 
+                onClick={handleConfirmEmail}
+                disabled={loading || !email}
+              >
+                🔧 DEV: Confirm Email ({email || 'enter email first'})
+              </Button>
+            )}
 
             <div className="text-sm text-center">
               Don&apos;t have an account?{' '}

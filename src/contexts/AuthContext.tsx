@@ -70,12 +70,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     if (!error && data.user) {
-      // Create profile entry
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: data.user.email!,
-        full_name: fullName,
-      })
+      // Create profile entry only if user is confirmed or confirmation not required
+      if (data.user.email_confirmed_at || !data.user.confirmation_sent_at) {
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: fullName,
+        })
+      }
+    }
+
+    // Provide better feedback for email confirmation
+    if (!error && data.user && data.user.confirmation_sent_at && !data.user.email_confirmed_at) {
+      return {
+        data,
+        error: null,
+        needsConfirmation: true,
+        message: 'Please check your email and click the confirmation link to activate your account.'
+      }
     }
 
     return { data, error }
@@ -86,6 +98,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
     })
+
+    // Handle unconfirmed email case
+    if (error && error.message.includes('Email not confirmed')) {
+      return { 
+        data, 
+        error: new Error('Please check your email and click the confirmation link to activate your account.')
+      }
+    }
 
     return { data, error }
   }
