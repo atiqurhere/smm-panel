@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Server-side Supabase client
 export const createServerSupabase = async () => {
@@ -26,7 +26,7 @@ export const createServerSupabase = async () => {
 
 // Service role client for admin operations
 export const createServiceSupabase = () => {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key'
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
   
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
