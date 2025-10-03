@@ -17,8 +17,12 @@ export default function Navigation() {
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
+    try {
+      await signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   const navigationItems = [
@@ -49,10 +53,8 @@ export default function Navigation() {
               <NavigationMenuList>
                 {navigationItems.map((item) => (
                   <NavigationMenuItem key={item.name}>
-                    <Link href={item.href} legacyBehavior passHref>
-                      <NavigationMenuLink className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
-                        {item.name}
-                      </NavigationMenuLink>
+                    <Link href={item.href} className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
+                      {item.name}
                     </Link>
                   </NavigationMenuItem>
                 ))}

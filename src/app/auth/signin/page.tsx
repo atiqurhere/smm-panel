@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -18,10 +18,17 @@ function SignInForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { signIn } = useAuth()
+  const { signIn, user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/dashboard'
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push(redirect)
+    }
+  }, [user, authLoading, redirect, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,12 +46,11 @@ function SignInForm() {
 
       if (error) {
         setError(error.message)
-      } else {
-        router.push(redirect)
+        setLoading(false)
       }
+      // Don't redirect here - let useEffect handle it when user state updates
     } catch (err: any) {
       setError('An unexpected error occurred')
-    } finally {
       setLoading(false)
     }
   }
